@@ -27,7 +27,7 @@ This will populate the WikiText103 directory with pickle-ized objects:
 - nums: The list of numerals extracted from WikiText-103
 - means: The means of the Gaussians components extracted from nums
 - log_means: The log-normalized means of the Gaussians components extracted from nums
-- 
+
 > **Note:** To alter the number of gaussian components, please toy with the **gmm** function inside preprocess.py
 
 ## Step II: Training Models
