@@ -52,7 +52,7 @@ There are 3 scripts for generating model embeddings as per the tasks described i
 
 ### Step IV: Regressors and Classifiers:
 
-Now that we have embeddings for the models saved, we can use our regressors and classifiers to compare model performance across the tasks. Both the Xgboost based regressor and the LSTM-based classifier take in path arguments for the saved location of X_train, y_train, X_test, y_test embeddings from step III.
+Now that we have embeddings for the models saved, we can use our regressors and classifiers to compare model performance across the tasks. Both the Xgboost-based regressor and the LSTM-based classifier take in path arguments for the saved location of X_train, y_train, X_test, y_test embeddings from step III.
 
 Running the regressor:
 ```
