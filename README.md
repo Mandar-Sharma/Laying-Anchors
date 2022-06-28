@@ -16,7 +16,7 @@ Please follow the step-wise description below to replicate the results published
 
 ## Step I: WikiText-103 and Preprocessing
 
-First, please download the [WikiText-103 word-level corpus](https://www.salesforce.com/products/einstein/ai-research/the-wikitext-dependency-language-modeling-dataset/) and place the contents (text files inside /WikiText103/raw).
+First, please download the [WikiText-103 word-level corpus](https://www.salesforce.com/products/einstein/ai-research/the-wikitext-dependency-language-modeling-dataset/) and place the contents (text files) inside /WikiText103/raw.
 
 Run the preprocessing script:
 ```
