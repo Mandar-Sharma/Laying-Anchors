@@ -1,6 +1,9 @@
 # Laying Anchors
 This repository anonymously hosts the codebase, datasets, and models for the EMNLP 22 submission "Laying Anchors: Semantically Priming Numerals in Language Modeling" 
 
+> **Note:** As the saved PyTorch models are larger in size, [Git LFS](https://git-lfs.github.com/) was used to push these models to Git. Please make sure you have it installed in your system.
+
+
 Before using this repository, please make sure you have the following packages installed in your environment:
 - [Numpy](https://numpy.org/)
 - [Pandas](https://pandas.pydata.org/)
