@@ -5,11 +5,18 @@ import pickle
 import numpy as np
 from tqdm import tqdm
 from random import sample
-from transformers import AutoTokenizer, AutoModel
+from decimal import Decimal
 from transformers import BertConfig, BertForMaskedLM, BertTokenizerFast
 
 with open('./WikiText103/nums', 'rb') as fp:
     numerals = pickle.load(fp)
+with open('./WikiText103/means', 'rb') as fp:
+    means = pickle.load(fp)
+with open('./WikiText103/log_means', 'rb') as fp:
+    log_means = pickle.load(fp)
+
+means = list(set(sorted([round(x) for x in means.flatten()])))
+log_means = list(set(sorted([round(x) for x in log_means.flatten()])))
 
 numerals = [int(x) for x in numerals if round(math.log(int(x), 10)) < 10]
 numerals = sorted(list(set(numerals)))
@@ -62,4 +69,248 @@ in_train_B10k, out_train_B10k, in_test_B10k, out_test_B10k = [], [], [], []
 in_test_B10k = sorted(random.sample(in_B10k, 872))
 in_train_B10k = list(set(in_B10k) - set(in_test_B10k)) 
 out_test_B10k = sorted(random.sample(out_B10k, 872))
-out_train_B10k = list(set(out_B10k) - set(out_test_B10k)) 
+out_train_B10k = list(set(out_B10k) - set(out_test_B10k))
+
+def fexp(number):
+    (sign, digits, exponent) = Decimal(number).as_tuple()
+    return len(digits) + exponent - 1
+
+def log_squash(num):
+    if num > 1:
+        return round((np.log(num) + 1) * 10)
+    elif num < -1:
+        return round((-np.log(-num) -1) * 10)
+    else:
+        return round(num * 10)
+
+def find_anc(i):
+    anchor = min(means, key=lambda x:abs(x-int(i)))
+    return str(anchor)
+
+def find_anc_log(i):
+    anchor = min(log_means, key=lambda x:abs(x-log_squash(int(i))))
+    return str(anchor)
+
+def get_embeddings_base(tokenizer_path, model_path, numbers_list, save_path)
+    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_path)
+    model = BertForMaskedLM.from_pretrained(model_path, output_hidden_states=True)
+
+    X = []
+    y = []
+
+    for i in tqdm(numbers_list):
+        input_ids = torch.tensor(tokenizer.encode(str(i))).unsqueeze(0)
+        outputs = model(input_ids)
+        last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+        X.append(last_four[0][1:-1].mean(dim=0))
+        y.append(i)
+
+    with open(save_path + /'X', 'wb') as fp:
+        pickle.dump(X, fp)
+    with open(save_path + /'y', 'wb') as fp:
+        pickle.dump(y, fp)
+
+def get_embeddings_exp(tokenizer_path, model_path, numbers_list, save_path, cues=False)
+    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_path)
+    model = BertForMaskedLM.from_pretrained(model_path, output_hidden_states=True)
+
+    if cues == False:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            input_ids = torch.tensor(tokenizer.encode(str(i))).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+    
+    elif cues == True:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            input_str = str(i) + " <EXP> " + str(fexp(i))
+            input_ids = torch.tensor(tokenizer.encode(input_str)).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+
+
+def get_embeddings_anc(tokenizer_path, model_path, numbers_list, save_path, cues=False)
+    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_path)
+    model = BertForMaskedLM.from_pretrained(model_path, output_hidden_states=True)
+
+    if cues == False:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            input_ids = torch.tensor(tokenizer.encode(str(i))).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+    
+    elif cues == True:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            anc = find_anc(i)
+            input_str = str(i) + " <ANC> " + str(anc)
+            input_ids = torch.tensor(tokenizer.encode(input_str)).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+
+def get_embeddings_lr_anc(tokenizer_path, model_path, numbers_list, save_path, cues=False)
+    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_path)
+    model = BertForMaskedLM.from_pretrained(model_path, output_hidden_states=True)
+
+    if cues == False:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            input_ids = torch.tensor(tokenizer.encode(str(i))).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+    
+    elif cues == True:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            anc = find_anc(i)
+            if (i - anc) > 0:
+                input_str = str(i) + ' <LA> ' + str(anc)
+            else:
+                input_str = str(i) + ' <RA> ' + str(anc)
+            input_ids = torch.tensor(tokenizer.encode(input_str)).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+
+def get_embeddings_loganc(tokenizer_path, model_path, numbers_list, save_path, cues=False)
+    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_path)
+    model = BertForMaskedLM.from_pretrained(model_path, output_hidden_states=True)
+
+    if cues == False:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            input_ids = torch.tensor(tokenizer.encode(str(i))).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+    
+    elif cues == True:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            anc = find_anc_log(i)
+            input_str = str(i) + " <ANC> " + str(anc)
+            input_ids = torch.tensor(tokenizer.encode(input_str)).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+
+def get_embeddings_lr_loganc(tokenizer_path, model_path, numbers_list, save_path, cues=False)
+    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_path)
+    model = BertForMaskedLM.from_pretrained(model_path, output_hidden_states=True)
+
+    if cues == False:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            input_ids = torch.tensor(tokenizer.encode(str(i))).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+    
+    elif cues == True:
+        X = []
+        y = []
+
+        for i in tqdm(numbers_list):
+            anc = find_anc_log(i)
+            if (log_squash(i) - anc) > 0:
+                input_str = str(i) + ' <LA> ' + str(anc)
+            else:
+                input_str = str(i) + ' <RA> ' + str(anc)
+            input_ids = torch.tensor(tokenizer.encode(input_str)).unsqueeze(0)
+            outputs = model(input_ids)
+            last_four = torch.stack(outputs['hidden_states'][-4:]).sum(0)
+            X.append(last_four[0][1:-1].mean(dim=0))
+            y.append(i)
+
+        with open(save_path + /'X', 'wb') as fp:
+            pickle.dump(X, fp)
+        with open(save_path + /'y', 'wb') as fp:
+            pickle.dump(y, fp)
+
+
+def main():
+    #Call the function for the respective model embeddings you'd like
+    #The global variables defined cover In-domain and Out-domain numerals from 1 to 10^10
+    pass
+
+if name == '__main__':
+    main()
