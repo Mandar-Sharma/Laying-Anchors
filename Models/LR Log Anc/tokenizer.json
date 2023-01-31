@@ -50,7 +50,16 @@
     },
     {
       "id": 30522,
-      "content": "<ANC>",
+      "content": "<LA>",
+      "single_word": false,
+      "lstrip": false,
+      "rstrip": false,
+      "normalized": false,
+      "special": true
+    },
+    {
+      "id": 30523,
+      "content": "<RA>",
       "single_word": false,
       "lstrip": false,
       "rstrip": false,

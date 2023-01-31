@@ -1,6 +1,7 @@
 {
   "additional_special_tokens": [
-    "<ANC>"
+    "<LA>",
+    "<RA>"
   ],
   "cls_token": "[CLS]",
   "mask_token": "[MASK]",
