@@ -93,15 +93,16 @@ def gmm(path, components  = 1000, logarithm = False):
 def main():
 	#Define your path to the raw dataset
 	dataset_path = "./WikiText103/raw"
-	total_tokens, total_numerals = find_numerals()
+	total_tokens, total_numerals = find_numerals(dataset_path)
 	#Write numerals to your choice of directory
-	file = open("./WikiText103/nums",'wb')
+	numbers_path = "./WikiText103/nums"
+	file = open(numbers_path,'wb')
 	numerals = pickle.dump(total_numerals, file)
 	file.close()
 
 	#Run GMMs on this list of numerals - choose appropriate value of Gaussian components
-	gmm_means, _, _ = gmm("./WikiText103/nums", components = 1000, logarithm = False)
-	gmm_means_log, _, _ = gmm("./WikiText103/nums", components = 1000, logarithm = True)
+	gmm_means, _, _ = gmm(numbers_path, components = 1000, logarithm = False)
+	gmm_means_log, _, _ = gmm(numbers_path, components = 1000, logarithm = True)
 
 	#Save as serialized objects
 	file = open("./WikiText103/means",'wb')
