@@ -1,5 +1,5 @@
 # Laying Anchors
-This repository anonymously hosts the codebase, datasets, and models for the NAACL 24 submission "Laying Anchors: Semantically Priming Numerals in Language Modeling" 
+This repository hosts the codebase, datasets, and models for the NAACL 24 submission "Laying Anchors: Semantically Priming Numerals in Language Modeling" 
 
 > **Note:** As the saved PyTorch models are larger in size, [Git LFS](https://git-lfs.github.com/) was used to push these models to Git. Please make sure you have it installed in your system.
 
